@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import FactoryGuy from './factory-guy';
+import dispatchReturns from 'ember-data-factory-guy/utils/dispatch-returns';
 import $ from 'jquery';
 
 // compare to object for loose equality
@@ -19,14 +20,6 @@ function isEquivalent(a, b) {
     }
   }
   return true;
-}
-
-function _fetch(modelName, ids) {
-  var store = FactoryGuy.get('store');
-  let models = ids.map(function (id) {
-    return store.peekRecord(modelName, id);
-  });
-  return models;
 }
 
 var MockQueryRequest = function (url, modelName, queryParams) {
@@ -69,6 +62,11 @@ var MockQueryRequest = function (url, modelName, queryParams) {
     return this.returns({ ids });
   };
 
+  this.returns = function (options = {}) {
+    [ responseJson, responseOptions ] = dispatchReturns(FactoryGuy.get('store'), modelName, options);
+    return this;
+  };
+
   // TODO .. test this is working
   this.andFail = function (options) {
     options = options || {};
@@ -77,37 +75,6 @@ var MockQueryRequest = function (url, modelName, queryParams) {
     if (options.response) {
       errors = FactoryGuy.getFixtureBuilder().convertResponseErrors(options.response);
     }
-    return this;
-  };
-
-  this.returns = function (options = {}) {
-    const responseKeys = ['models', 'json', 'ids'].filter((k)=> options.hasOwnProperty(k));
-    Ember.assert(`[ember-data-factory-guy] You can pass zero or one one output key to 'returns',
-                 you passed ${responseKeys.length}: ${responseKeys.toString()}`, responseKeys.length <= 1);
-
-    const [ responseKey ] = responseKeys;
-
-    switch(responseKey) {
-      case 'ids':
-        return this.returns({ models: _fetch(modelName, options.ids) });
-      case 'models':
-        let { models } = options;
-        Ember.assert('argument ( models ) must be an array - found type:' + Ember.typeOf(models), Ember.isArray(models));
-        models = Ember.makeArray(models);
-
-        var json = models.map(function (model) {
-          return {id: model.id, type: model.constructor.modelName};
-        });
-
-        responseJson = FactoryGuy.getFixtureBuilder().convertForBuild(modelName, json);
-        break;
-      case 'json':
-        responseJson = options.json;
-        break;
-    }
-
-    responseOptions = Ember.merge({}, options);
-    delete responseOptions[responseKey];
     return this;
   };
 
