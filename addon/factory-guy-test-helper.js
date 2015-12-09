@@ -209,13 +209,13 @@ var FactoryGuyTestHelper = Ember.Object.create({
    handleCreate('post')
    handleCreate('post').match({title: 'foo'});
    handleCreate('post').match({title: 'foo', user: user});
-   handleCreate('post').andReturn({createdAt: new Date()});
-   handleCreate('post').match({title: 'foo'}).andReturn({createdAt: new Date()});
+   handleCreate('post').returns({createdAt: new Date()});
+   handleCreate('post').match({title: 'foo'}).returns({createdAt: new Date()});
    handleCreate('post').match({title: 'foo'}.andFail();
    ```
 
    match - attributes that must be in request json,
-   andReturn - attributes to include in response json,
+   returns - attributes to include in response json,
    andFail - can include optional status and response attributes
 
    ```js

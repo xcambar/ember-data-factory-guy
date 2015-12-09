@@ -2,14 +2,28 @@ import Ember from 'ember';
 import FactoryGuy from './factory-guy';
 import $ from 'jquery';
 
-var MockCreateRequest = function (url, modelName, options) {
+var MockCreateRequest = function (url, modelName, options = {}) {
   var status = options.status;
   var succeed = options.succeed === undefined ? true : options.succeed;
   var matchArgs = options.match;
-  var returnArgs = options.returns;
+  var returnArgs;
   var responseJson = {};
   var expectedRequest = {};
   var store = FactoryGuy.get('store');
+
+  this.returns = function (payload) {
+    returnArgs = payload;
+    this.calculate();
+    return this;
+  };
+  this.andReturn = function () {
+    Ember.deprecate(
+      '`andReturn` has been deprecated. Use `returns(payload) instead.`',
+      true,
+      { id: 'ember-data-factory-guy.andReturn', until: '3.0.0' }
+    );
+    return this.returns(...arguments);
+  };
 
   this.calculate = function () {
     if (matchArgs) {
@@ -40,12 +54,6 @@ var MockCreateRequest = function (url, modelName, options) {
     return this;
   };
 
-  this.andReturn = function (returns) {
-    returnArgs = returns;
-    this.calculate();
-    return this;
-  };
-
   this.andFail = function (options = {}) {
     succeed = false;
     status = options.status || 500;
@@ -56,6 +64,7 @@ var MockCreateRequest = function (url, modelName, options) {
     return this;
   };
 
+  this.returns(options.returns);
   // for supporting older ( non chaining methods ) style of passing in options
   Ember.deprecate(
     `[ember-data-factory-guy] TestHelper.handleCreate - options.succeed has been deprecated.

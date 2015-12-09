@@ -846,9 +846,7 @@ you must wait on the request for those records to resolve before they will be lo
    - For dealing with finding all records for a type of model with query parameters.
    - Takes modifier methods for controlling the response
     - withParams
-    - returnsModels
-    - returnsJSON
-    - returnsExistingIds
+    - returns
    - Can reuse the same handler again to simulate same query with different results
 
 *Using plain handleQuery returns no results*
@@ -862,14 +860,14 @@ you must wait on the request for those records to resolve before they will be lo
      })
    ```
 
-*Use returnsModles by passing in array of model instances*
+*Use returns() by passing in array of model instances*
 
    ```js
      // Create model instances
      var users = FactoryGuy.makeList('user', 2, 'with_hats');
 
      // Pass in the array of model instances as last argument
-     TestHelper.handleQuery('user', {name:'Bob', age: 10}).returnsModels(users);
+     TestHelper.handleQuery('user', {name:'Bob', age: 10}).returns({ models: users });
 
      // will stub a call to the store like this:
      store.query('user', {name:'Bob', age: 10}}).then(function(models) {
@@ -878,14 +876,14 @@ you must wait on the request for those records to resolve before they will be lo
    ```
 
 
-*Use returnsJSON by passing in json*
+*Use returns() by passing in json*
 
    ```js
      // Create json with buildList
      var usersJSON = FactoryGuy.buildList('user', 2, 'with_hats');
 
-     // use returnsJSON to pass in this response
-     TestHelper.handleQuery('user', {name:'Bob', age: 10}).returnsJSON(usersJSON);
+     // use returns to pass in this response
+     TestHelper.handleQuery('user', {name:'Bob', age: 10}).returns({ json: usersJSON });
 
      store.query('user', {name:'Bob', age: 10}}).then(function(models) {
         // these models were created from the usersJSON
@@ -893,16 +891,16 @@ you must wait on the request for those records to resolve before they will be lo
 
    ```
 
-*Use returnsExistingIds by passing in array of ids of existing models*
+*Use returns() by passing in array of ids of existing models*
 
    ```js
      // Create list of models
      var users = FactoryGuy.makeList('user', 2, 'with_hats');
      var user1 = users.get('firstObject');
 
-     // use returnsExistingIds to pass in the users ids you want
+     // use returns({ ids }) to pass in the users ids you want
      // in this case let's say you only want to pass back the first user
-     TestHelper.handleQuery('user', {name:'Bob', age: 10}).returnsExistingIds([user1.id]);
+     TestHelper.handleQuery('user', {name:'Bob', age: 10}).returns({ ids: [user1.id] });
 
      store.query('user', {name:'Bob', age: 10}}).then(function(models) {
         // models will be one model and it will be user1
@@ -924,7 +922,7 @@ you must wait on the request for those records to resolve before they will be lo
        var bob = store.make('user', {name: 'Bob'});
 
        // reuse the same query handler since it's the same query
-       bobQueryHander.returnsModels([bob]);
+       bobQueryHander.returns({ models: [bob] });
 
        store.query('user', {name: 'Bob'}).then(function (users) {
          //=> users.get('length') === 1;
@@ -942,13 +940,13 @@ you must wait on the request for those records to resolve before they will be lo
      var bob = store.make('user', {name: 'Bob'});
      var dude = store.make('user', {name: 'Dude'});
 
-     var userQueryHander = TestHelper.handleQuery('user', {name: 'Bob'}).returnsModels([bob]);
+     var userQueryHander = TestHelper.handleQuery('user', {name: 'Bob'}).returns({ models: [bob] });
 
      store.query('user', {name: 'Bob'}).then(function (users) {
        //=> users.get('length') === 1;
 
        // reuse the same user query handler but change the expected query parms
-       userQueryHander.withParams({name: 'Dude'}).returnsModels([dude]);
+       userQueryHander.withParams({name: 'Dude'}).returns({ models: [dude] });
 
        store.query('user', {name: 'Dude'}).then(function (users) {
          //=> users.get('length') === 1;
@@ -964,7 +962,7 @@ you must wait on the request for those records to resolve before they will be lo
   - Use chainable methods to build the response
     - match
       - Attributes that must be in request json
-    - andReturns
+    - returns
       - Attributes to include in response json
     - andFail
       - Request will fail
@@ -1020,7 +1018,7 @@ chainable methods.
   // Exactly matching attributes, and returning extra attributes
   TestHelper.handleCreate('project')
     .match({name: "Moo", user: user})
-    .andReturn({created_at: new Date()});
+    .returns({created_at: new Date()});
 
 ```
 
